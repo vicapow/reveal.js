@@ -20,6 +20,12 @@
 		<!-- Code syntax highlighting -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
 
+		<style>
+		.reveal section img {
+			border: none;
+		}
+		</style>
+
 		<!-- Printing and PDF exports -->
 		<script>
 			var link = document.createElement( 'link' );
@@ -48,12 +54,194 @@
 					</p>
 				</section>
 
+				<section data-markdown>
+					[react-map-gl](http://uber.github.io/react-map-gl/#/). Wrapper around [MapboxGL-js](https://www.mapbox.com/mapbox-gl-js/examples/)
+				</section>
+
+				<section data-markdown>
+			     ![](https://cloud.githubusercontent.com/assets/499192/11028165/49f41da2-86bc-11e5-85eb-9279621ef971.png)
+				</section>
+
+				<section data-markdown>
+					### react-map-gl
+					Goals
+					 * Drop in solution for React apps that want maps. (Lots of React Apps at Uber.)
+					 * Give it a pure/stateless API.
+				</section>
+
+				<section data-markdown>
+					![](img/desktop.png)
+					[live demo](http://vicapow.github.io/react-map-gl-stack-gl-overlay-example/)
+				</section>
+
 				<section>
-					<h2>Background Transitions</h2>
-					<p>
-						You can override background transitions per-slide.
-					</p>
-					<pre><code class="hljs" style="word-wrap: break-word;">&lt;section data-background-transition="zoom"&gt;</code></pre>
+					<pre><code>&lt;MapGL
+  width={700}
+  height={450}
+  latitude={37.78}
+  longitude={-122.45}
+  zoom={11}
+  mapStyle={mapStyle} /&gt;</code></pre>
+				</section>
+
+				<section>
+					<pre><code>&lt;MapGL {...viewport} mapStyle={mapStyle}
+  onChangeViewport={this.onChangeViewport}/&gt;</code></pre>
+				</section>
+
+				<section>
+					<p>Stateless</p>
+					<pre><code>onChangeViewport: function(viewport) {
+  if (viewport.zoom < 10) {
+    // Clamp zoom level to 10
+    return;
+  }
+  this.setState({viewport});
+}</code></pre>
+				</section>
+
+				<section>
+				viewport + mercator projection:
+					pixels <-> lng,lat
+				</section>
+
+				<section>
+				<pre><code>var Mercator = require('viewport-mercator-project');
+var mercator = Mercator(viewport);
+var pixel = mercator.project([-122.45, 37.77]);
+var lngLat = mercator.unproject(pixel);
+</code></pre>
+				</section>
+
+				<section>
+				<pre><code>function MyOverlay() {
+  var {width, height} = this.props.viewport;
+  var mercator = Mercator(viewport);
+  var location = [-122.45, 37.77]; // San Francisco
+  return &lt;svg width={width} height={height}&gt;
+    // Draw a dot on top of San Francisco
+    &lt;circle r="10" transform={`translate(${mercator(location)})`} /&gt;
+  &lt;/svg&gt;;
+}
+</code></pre>
+				</section>
+
+				<section data-markdown>
+				  ## Why create a new module?
+				</section>
+
+				<section data-markdown>
+					## Example: [d3-request](https://github.com/d3/d3-request)
+					As it's own module, with its own semver, we wouldn't need to worry about breaking API changes to it if we didn't use it in our code.
+				</section>
+
+				<section data-markdown>
+					### Without small modules
+					Consumer: I upgraded to D3 to v4 to fix an issue with shapes in my project and now my http requests are failing!
+					### With small modules
+					Consumer: I upgraded d3-shape to fix an issue with SVG shapes in my project and nothing else happened.
+				</section>
+
+				<section data-markdown>
+					# Small Modules
+					Collect code into small, resuable chunks.
+				</section>
+
+				<section>
+					<table>
+						<thead>
+							<tr>
+								<th>small modules</th><th>mono libraries</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>small builds</td><td>larger builds</td>
+							</tr>
+							<tr>
+								<td>mistakes are ok!</td><td>get it right!</td>
+							</tr>
+							<tr>
+								<td>isolated</td><td>systemic</td>
+							</tr>
+							<tr>
+								<td>multiple repos</td><td>single repo</td>
+							</tr>
+							<tr>
+								<td>can cause cascaded commits</td><td>always single commit</td>
+							</tr>
+							<tr>
+								<td>docs in each repo</td><td>docs in one repo</td>
+							</tr>
+							<tr>
+								<td>decouples unrelated code</td><td>cohension of all code</td>
+							</tr>
+							<tr>
+								<td>reuse</td><td>reinvention</td>
+							</tr>
+							<tr>
+								<td>optionality</td><td>lockin</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+
+				<section>
+				  <h4>Example projects</h4>
+					<table>
+						<thead>
+							<tr>
+								<th>small modules</th><th>mono frameworks</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>D3 v4</td><td>jQuery</td>
+							</tr>
+							<tr>
+								<td>React</td><td>Ember</td>
+							</tr>
+							<tr>
+								<td>stack.gl</td><td>Three.js</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+
+				<section data-markdown>
+					### Small modules and "antifragility"
+					![](img/antifragile.jpg)
+
+					Nassim Nicholas Taleb
+				</section>
+
+				<section data-markdown>
+					Fragile - You stress it and it breaks.
+					
+					Robust - You stress it and it doesn't break.
+					
+					Antifragile - You stress it and it gets better.
+				</section>
+
+				<section>
+					Reusable overlays can be created that don't need to directly require react-map-gl or mapbox. They can even use the overlays without being interactive. Just need to make sure to give it proper viewport coordinates.
+				</section>
+
+				<section data-markdown>
+					## Further reading
+					[Module Best Practices](https://github.com/mattdesl/module-best-practices) - By Matt DesLauriers
+					
+					[Unix Philosophy and Node.JS](http://blog.izs.me/post/48281998870/unix-philosophy-and-nodejs) - Isaac Z. Schlueter
+					
+					[How I Write Modules](http://substack.net/how_I_write_modules) - James Holiday
+				</section>
+
+				<section>
+					<img src="img/uber-logo.png" />
+				</section>
+
+				<section data-markdown>
+					## Thank you
 				</section>
 
 			</div>
